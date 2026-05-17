@@ -1,10 +1,8 @@
 # Hash Chain
 
-**Prove you're the same anonymous person across posts — without revealing who you are.**
+**Prove you're the same anonymous person across posts, without revealing who you are.**
 
 A single-file web app that generates a cryptographic hash chain. Drop a token into each post. Anyone can verify two consecutive tokens chain together. Nobody can forge the next one without your passphrase.
-
-→ **[Live site](https://komixkat.github.io/hashchain)**
 
 ---
 
