@@ -4,7 +4,7 @@
 
 A single-file web app that generates a cryptographic hash chain. Drop a token into each post. Anyone can verify two consecutive tokens chain together. Nobody can forge the next one without your passphrase.
 
-→ **[Live site](https://your-username.github.io/hashchain)**
+→ **[Live site](https://komixkat.github.io/hashchain)**
 
 ---
 
