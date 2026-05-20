@@ -2,7 +2,7 @@
 
 Prove you're the same anonymous person across posts without revealing who you are.
 
-Live at **[komixkat.github.io/hashchain](https://komixkat.github.io/hashchain/)** — no install needed, just open it.
+Live at **[komixkat.github.io/hashchain](https://komixkat.github.io/hashchain/)** — no install needed.
 
 ---
 
