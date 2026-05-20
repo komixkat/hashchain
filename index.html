@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hash Chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060608;
+  --surface: #0d0d10;
+  --panel: #111116;
+  --border: #1e1e28;
+  --border2: #2a2a38;
+  --glow: #00ff9d;
+  --glow2: #00c87a;
+  --glow-dim: rgba(0,255,157,0.08);
+  --glow-mid: rgba(0,255,157,0.18);
+  --amber: #ffb800;
+  --amber-dim: rgba(255,184,0,0.1);
+  --red: #ff3c3c;
+  --red-dim: rgba(255,60,60,0.1);
+  --text: #d4d4e0;
+  --muted: #5a5a72;
+  --dim: #333344;
+  --mono: 'Space Mono', monospace;
+  --vt: 'VT323', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* scanlines overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* noise grain */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.4;
+  animation: grain 0.5s steps(2) infinite;
+}
+
+@keyframes grain {
+  0%,100% { transform: translate(0,0); }
+  10% { transform: translate(-2%,-3%); }
+  30% { transform: translate(3%,1%); }
+  50% { transform: translate(-1%,3%); }
+  70% { transform: translate(2%,-1%); }
+  90% { transform: translate(-3%,2%); }
+}
+
+/* ── Header ── */
+header {
+  border-bottom: 1px solid var(--border2);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.header-logo {
+  padding: 1.5rem 2rem;
+  border-right: 1px solid var(--border2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.header-logo::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 1px;
+  background: var(--glow);
+  box-shadow: 0 0 8px var(--glow);
+  opacity: 0.4;
+}
+
+.logo-title {
+  font-family: var(--vt);
+  font-size: 2.8rem;
+  color: var(--glow);
+  text-shadow: 0 0 20px var(--glow), 0 0 40px rgba(0,255,157,0.3);
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+
+.logo-sub {
+  font-size: 0.55rem;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 0.3rem;
+}
+
+.header-stats {
+  flex: 1;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.hstat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.hstat-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hstat-val {
+  font-family: var(--vt);
+  font-size: 1.4rem;
+  color: var(--glow);
+  text-shadow: 0 0 10px rgba(0,255,157,0.4);
+  line-height: 1;
+}
+
+.header-blink {
+  width: 8px; height: 8px;
+  background: var(--glow);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--glow);
+  animation: blink 1.2s ease-in-out infinite;
+  margin-left: auto;
+  margin-right: 2rem;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.1; }
+}
+
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 90px);
+}
+
+.col {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.col:last-child { border-right: none; }
+
+/* ── Section ── */
+.section {
+  border-bottom: 1px solid var(--border);
+  flex: 1;
+}
+
+.section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.section-title {
+  font-family: var(--vt);
+  font-size: 1.2rem;
+  color: var(--glow);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 8px rgba(0,255,157,0.3);
+}
+
+.section-tag {
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+.tag-green { border-color: var(--glow2); color: var(--glow2); background: var(--glow-dim); }
+.tag-amber { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+.tag-muted { border-color: var(--border2); color: var(--muted); }
+
+.section-body { padding: 1.5rem; }
+
+/* ── Fields ── */
+.field { margin-bottom: 1.1rem; }
+.field:last-child { margin-bottom: 0; }
+
+.label {
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+}
+
+input[type=text],
+input[type=password],
+input[type=number] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 0.65rem 0.85rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  border-radius: 0;
+  caret-color: var(--glow);
+  -webkit-appearance: none;
+}
+
+input::placeholder { color: var(--dim); }
+
+input:focus {
+  border-color: var(--glow2);
+  box-shadow: 0 0 0 2px var(--glow-dim), inset 0 0 20px rgba(0,255,157,0.02);
+}
+
+input[type=number] { width: auto; min-width: 90px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--glow2);
+  background: transparent;
+  color: var(--glow);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.6rem 1.1rem;
+  cursor: crosshair;
+  transition: all 0.1s;
+  border-radius: 0;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glow);
+  transform: translateX(-101%);
+  transition: transform 0.15s;
+}
+
+.btn span { position: relative; z-index: 1; }
+.btn:hover::before { transform: translateX(0); }
+.btn:hover { color: var(--bg); }
+.btn:active { transform: scale(0.98); }
+
+.btn-amber {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.btn-amber::before { background: var(--amber); }
+
+.btn-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* ── Copy chip ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.5rem;
+  cursor: crosshair;
+  transition: all 0.1s;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.chip:hover { border-color: var(--glow2); color: var(--glow); }
+.chip.ok { border-color: var(--glow); color: var(--glow); background: var(--glow-dim); }
+
+/* ── Hash box ── */
+.hash-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  position: relative;
+}
+
+.hash-box::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--glow);
+  box-shadow: 0 0 6px var(--glow);
+  opacity: 0.5;
+}
+
+.hash-val {
+  font-size: 0.72rem;
+  color: var(--text);
+  word-break: break-all;
+  line-height: 1.6;
+  flex: 1;
+  font-family: var(--mono);
+}
+
+/* ── Token spotlight ── */
+.token-box {
+  background: var(--surface);
+  border: 1px solid rgba(0,255,157,0.2);
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  position: relative;
+  box-shadow: inset 0 0 30px rgba(0,255,157,0.03);
+}
+
+.token-box::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--glow);
+  box-shadow: 0 0 10px var(--glow);
+}
+
+.token-val {
+  font-size: 0.75rem;
+  color: var(--glow);
+  word-break: break-all;
+  line-height: 1.6;
+  flex: 1;
+  font-family: var(--mono);
+  text-shadow: 0 0 8px rgba(0,255,157,0.3);
+}
+
+/* ── Stats row ── */
+.stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.stat b { color: var(--text); }
+
+/* ── Post preview ── */
+.preview {
+  background: var(--surface);
+  border: 1px dashed var(--border2);
+  padding: 0.85rem 1rem;
+  font-size: 0.68rem;
+  line-height: 1.8;
+  color: var(--muted);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 0.75rem;
+}
+
+.preview .sig { color: var(--glow); }
+
+/* ── Verify result ── */
+.verify-out {
+  display: none;
+  margin-top: 0.85rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  border-left: 2px solid;
+  line-height: 1.55;
+}
+
+.v-ok { border-color: var(--glow); color: var(--glow); background: var(--glow-dim); }
+.v-fail { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+
+/* ── Lookup result ── */
+.lookup-out { display: none; margin-top: 0.75rem; }
+
+.lrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+}
+
+.lrow.current { border-color: rgba(0,255,157,0.25); background: rgba(0,255,157,0.03); }
+
+.lnum {
+  font-size: 0.6rem;
+  color: var(--muted);
+  width: 2rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lrow.current .lnum { color: var(--glow); }
+
+.lhash {
+  font-size: 0.68rem;
+  color: var(--text);
+  flex: 1;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.lnote {
+  font-size: 0.58rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  padding: 0 0.85rem;
+  letter-spacing: 0.06em;
+}
+
+/* ── Inline row ── */
+.inline-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.inline-row .field { flex: 1; min-width: 80px; margin-bottom: 0; }
+
+/* ── Note ── */
+.note {
+  font-size: 0.6rem;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-top: 0.6rem;
+  letter-spacing: 0.02em;
+}
+
+.note a { color: var(--glow2); text-decoration: none; }
+.note a:hover { text-decoration: underline; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 1.1rem 0; }
+
+/* ── Hidden ── */
+.hidden { display: none; }
+
+/* ── Fade in ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease both; }
+
+/* ── Shake ── */
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-4px)}
+  60%{transform:translateX(4px)}
+}
+.shake { animation: shake 0.22s ease; }
+
+/* ── Terminal cursor ── */
+@keyframes cursor {
+  0%,100%{opacity:1}50%{opacity:0}
+}
+
+.cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  background: var(--glow);
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: cursor 1s step-end infinite;
+  box-shadow: 0 0 6px var(--glow);
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .col { border-right: none; }
+  .header-stats { display: none; }
+  .logo-title { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <div class="logo-title">HASH_CHAIN</div>
+      <div class="logo-sub">anonymous identity protocol</div>
+    </div>
+    <div class="header-stats">
+      <div class="hstat">
+        <div class="hstat-label">algorithm</div>
+        <div class="hstat-val">SHA-256</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-label">chain depth</div>
+        <div class="hstat-val">100</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-label">key rounds</div>
+        <div class="hstat-val">2000</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-label">storage</div>
+        <div class="hstat-val">NONE</div>
+      </div>
+    </div>
+    <div class="header-blink"></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT COL: Verify + Generate -->
+  <div class="col">
+
+    <!-- VERIFY -->
+    <div class="section">
+      <div class="section-bar">
+        <span class="section-title">VERIFY</span>
+        <span class="section-tag tag-muted">for readers</span>
+      </div>
+      <div class="section-body">
+        <p class="note" style="margin-top:0;margin-bottom:1rem">Paste two consecutive tokens. If <code>sha256(newer) == older</code> they chain correctly.</p>
+        <div class="field">
+          <label class="label">Older token or anchor</label>
+          <input type="text" id="vPrev" placeholder="from the earlier post" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="label">Newer token to verify</label>
+          <input type="text" id="vCurr" placeholder="from the later post" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="btn-row" style="margin-top:0.5rem">
+          <button class="btn" onclick="doVerify()"><span>Verify</span></button>
+        </div>
+        <div class="verify-out" id="vResult"></div>
+      </div>
+    </div>
+
+    <!-- GENERATE -->
+    <div class="section">
+      <div class="section-bar">
+        <span class="section-title">GENERATE</span>
+        <span class="section-tag tag-muted">private</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label class="label">Secret passphrase</label>
+          <input type="password" id="seedInput" autocomplete="off" spellcheck="false">
+        </div>
+        <p class="note">Never shared. Same phrase = same 100 tokens every time.</p>
+        <div class="btn-row">
+          <button class="btn btn-amber" onclick="setup()"><span id="genBtnText">Generate chain</span></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COL: Chain (hidden until generated) -->
+  <div class="col" id="rightCol">
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="section" style="flex:1">
+      <div class="section-bar">
+        <span class="section-title">CHAIN</span>
+        <span class="section-tag tag-muted">waiting</span>
+      </div>
+      <div class="section-body" style="display:flex;align-items:center;justify-content:center;min-height:200px">
+        <div style="text-align:center">
+          <div style="font-family:var(--vt);font-size:3rem;color:var(--border2);margin-bottom:0.5rem">[ ]</div>
+          <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase">Enter passphrase to begin<span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANCHOR (shown after generate) -->
+    <div id="anchorSection" class="section hidden fade-in">
+      <div class="section-bar">
+        <span class="section-title">ANCHOR</span>
+        <span class="section-tag tag-amber">post this once</span>
+      </div>
+      <div class="section-body">
+        <p class="note" style="margin-top:0;margin-bottom:0.5rem">Post in your first message. All future tokens trace back to this.</p>
+        <div class="hash-box">
+          <div class="hash-val" id="anchorVal"></div>
+          <span class="chip" id="copyAnchor" onclick="copyEl('anchorVal','copyAnchor')">copy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CURRENT TOKEN (shown after generate) -->
+    <div id="tokenSection" class="section hidden fade-in" style="flex:1">
+      <div class="section-bar">
+        <span class="section-title">CURRENT TOKEN</span>
+        <span class="section-tag tag-green" id="chainBadge">--</span>
+      </div>
+      <div class="section-body">
+        <div class="stats">
+          <span class="stat">token <b id="tNum">1</b> / 100</span>
+          <span class="stat"><b id="tLeft">100</b> remaining</span>
+        </div>
+        <p class="note" style="margin-top:0;margin-bottom:0.5rem">Paste at the bottom of your post, then mark used.</p>
+        <div class="token-box">
+          <div class="token-val" id="curToken"></div>
+          <span class="chip" id="copyToken" onclick="copyEl('curToken','copyToken')">copy</span>
+        </div>
+        <div class="preview" id="postPreview"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="advance()"><span>Mark used + next</span></button>
+        </div>
+
+        <hr>
+
+        <p class="note" style="margin-top:0;margin-bottom:0.75rem">Jump to any token by number.</p>
+        <div class="inline-row">
+          <div class="field">
+            <label class="label">Token number</label>
+            <input type="number" id="lookupN" min="1" max="100" placeholder="e.g. 42">
+          </div>
+          <button class="btn" onclick="lookupToken()" style="height:2.5rem"><span>Show</span></button>
+        </div>
+        <div class="lookup-out" id="lookupOut"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Random passphrase placeholder ──
+const W = {
+  a: ['silent','hollow','cold','pale','lost','broken','quiet','empty','sharp','bitter','slow','dark','thin','wild','heavy'],
+  n: ['crow','moth','wolf','tide','ash','iron','root','smoke','bone','salt','raven','ghost','flame','dust','stone'],
+  v: ['chases','haunts','carries','watches','forgets','crosses','holds','finds','hides','drops','reads','pulls','lifts','moves','leaves'],
+  o: ['the moon','a key','nothing','the path','the signal','three coins','its shadow','the answer','an old name','the thread','the light','what remains']
+};
+const pick = a => a[Math.random()*a.length|0];
+document.getElementById('seedInput').placeholder = `${pick(W.a)} ${pick(W.n)} ${pick(W.v)} ${pick(W.o)}`;
+
+// ── Crypto core (closure) ──
+const _c = (() => {
+  const h = async s => {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  };
+  const stretch = async (seed, n) => {
+    let x = seed+'\x00hc\x01v5';
+    for(let i=0;i<n;i++) x = await h(x+i);
+    return x;
+  };
+  return {h, stretch};
+})();
+
+let _ch = null;
+
+async function setup() {
+  const raw = document.getElementById('seedInput').value;
+  if(!raw.trim()){ shake('seedInput'); return; }
+
+  const btn = document.getElementById('genBtnText');
+  btn.textContent = 'Computing...';
+
+  const s = await _c.stretch(raw, 2000);
+  const H = [s];
+  for(let i=0;i<101;i++) H.push(await _c.h(H[H.length-1]));
+
+  _ch = { anchor: H[101], tokens: [], cursor: 0 };
+  for(let i=100;i>=1;i--) _ch.tokens.push(H[i]);
+
+  document.getElementById('seedInput').value = '';
+  document.getElementById('seedInput').placeholder = `${pick(W.a)} ${pick(W.n)} ${pick(W.v)} ${pick(W.o)}`;
+  btn.textContent = 'Regenerate';
+
+  document.getElementById('anchorVal').textContent = _ch.anchor;
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('anchorSection').classList.remove('hidden');
+  document.getElementById('tokenSection').classList.remove('hidden');
+  updateUI();
+}
+
+function updateUI() {
+  const i = _ch.cursor, left = _ch.tokens.length - i;
+  document.getElementById('tNum').textContent = i+1;
+  document.getElementById('tLeft').textContent = left;
+  document.getElementById('chainBadge').textContent = `${left} left`;
+  const tok = _ch.tokens[i];
+  document.getElementById('curToken').textContent = tok;
+  document.getElementById('postPreview').innerHTML =
+    `your message...\n\n<span class="sig">sig: ${tok}</span>`;
+  resetChip('copyToken');
+  document.getElementById('lookupOut').style.display = 'none';
+}
+
+function advance() {
+  if(!_ch || _ch.cursor >= _ch.tokens.length-1){
+    alert('All 100 tokens used. Re-enter your passphrase to restart.'); return;
+  }
+  _ch.cursor++;
+  updateUI();
+}
+
+async function lookupToken() {
+  if(!_ch) return;
+  const n = parseInt(document.getElementById('lookupN').value);
+  if(!n||n<1||n>100){ shake('lookupN'); return; }
+  const idx = n-1, tok = _ch.tokens[idx];
+  const isCurrent = idx===_ch.cursor, isUsed = idx<_ch.cursor;
+  const out = document.getElementById('lookupOut');
+  out.style.display = 'block';
+  out.innerHTML = `
+    <div class="lrow ${isCurrent?'current':''}" style="margin-bottom:0.25rem">
+      <div class="lnum">#${n}</div>
+      <div class="lhash">${tok}</div>
+      <span class="chip" onclick="copyText('${tok}',this)">copy</span>
+    </div>
+    <div class="lnote">${isUsed?'already used':isCurrent?'current token':`${idx-_ch.cursor} ahead`}</div>`;
+}
+
+async function doVerify() {
+  const prev = document.getElementById('vPrev').value.trim();
+  const curr = document.getElementById('vCurr').value.trim();
+  const el = document.getElementById('vResult');
+  if(!prev||!curr){ el.style.display='none'; return; }
+  const hashed = await _c.h(curr);
+  el.style.display = 'block';
+  if(hashed===prev){
+    el.className='verify-out v-ok fade-in';
+    el.textContent='VALID: tokens chain correctly. Same person.';
+  } else {
+    el.className='verify-out v-fail fade-in';
+    el.textContent='INVALID: these do not chain. Wrong order or forgery.';
+  }
+}
+
+async function copyEl(srcId, chipId) {
+  await copyText(document.getElementById(srcId).textContent.trim(), document.getElementById(chipId));
+}
+
+async function copyText(text, chip) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const t = document.createElement('textarea');
+    t.value=text; t.style.cssText='position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+    document.body.appendChild(t); t.focus(); t.select();
+    document.execCommand('copy'); t.remove();
+  }
+  if(chip){
+    chip.classList.add('ok'); chip.textContent='ok';
+    setTimeout(()=>{ chip.classList.remove('ok'); chip.textContent='copy'; }, 1800);
+  }
+}
+
+function resetChip(id) {
+  const c = document.getElementById(id);
+  if(c){ c.classList.remove('ok'); c.textContent='copy'; }
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(()=>el.classList.remove('shake'),250);
+}
+</script>
+</body>
+</html>
