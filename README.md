@@ -1,14 +1,14 @@
-# Hash Chain
+# Hash_Chain
 
 Prove you're the same anonymous person across posts without revealing who you are.
 
-Live at **[komixkat.github.io/hashchain](https://komixkat.github.io/hashchain/)** — no install needed.
+Live at **[hash_chain](https://komixkat.github.io/hashchain/)** — no install needed.
 
 ---
 
 ## What it does
 
-You pick a secret passphrase. It generates 100 unique tokens tied to that passphrase. Drop one token at the bottom of each post. Anyone can verify two consecutive tokens actually chain together with a single SHA-256 call. Nobody can fake the next token without knowing your passphrase.
+You pick a secret passphrase. It generates "X" unique tokens tied to that passphrase and time of generation. Drop one token at the bottom of each post. Anyone can verify two consecutive tokens actually chain together with a single SHA-512 call. Nobody can fake the next token without knowing your passphrase.
 
 The chain is one-way. Seeing token #42 tells you nothing about token #41. The passphrase never leaves your browser.
 
@@ -31,19 +31,20 @@ Download `index.html` and open it in any browser. No server needed, no build ste
 
 ---
 
-## How the crypto works
+## How the magic works
 
-Your passphrase is run through SHA-256 two thousand times before anything else happens, which makes brute-forcing it slow. Then the app builds a chain by hashing forward 100 times. You post in reverse order, so each new token you reveal is the preimage of the previous one.
+Your salted passphrase is run through SHA-512 "X" times before anything else happens, which makes brute-forcing it slow. Then the site builds a chain by hashing forward. You post in reverse order, so each new token you reveal is the preimage of the previous one.
 
-Verification is just `sha256(newer token) == older token`. One call, no special tools.
+Verification is just `sha512 (newer token) == older token`, simple and efficient.
 
 ---
 
 ## Files
 
 ```
-index.html          the whole app
-.github/workflows/  auto-deploy to GitHub Pages
+index.html                    the whole app
+.github/workflows/deploy.yml  auto-deploy to GitHub Pages
+oneko.js & oneko.gif          cat chase mouse
 ```
 
 ---
