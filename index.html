@@ -838,5 +838,18 @@ function shake(id) {
   setTimeout(()=>el.classList.remove('shake'),250);
 }
 </script>
+
+<script>
+document.addEventListener("touchmove", e => {
+  const touch = e.touches[0];
+  window.dispatchEvent(new MouseEvent("mousemove", {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  }));
+}, { passive: true });
+</script>
+
+<script src="oneko.js"></script>
+  
 </body>
 </html>
