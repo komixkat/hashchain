@@ -1,8 +1,6 @@
 # Hash_Chain
 
-Prove you're the same anonymous person across posts without revealing who you are.
-
-Live at **[hash_chain](https://komixkat.github.io/hashchain/)** — no install needed.
+Live at **[komixkat.github.io/hashchain](https://komixkat.github.io/hashchain/)** — no install needed.
 
 ---
 
@@ -27,7 +25,7 @@ Your copy will be live at `https://your-username.github.io/hashchain`
 
 **Or just open the file**
 
-Download `index.html` and open it in any browser. No server needed, no build step, nothing to install.
+Download `index.html` and open it in any browser. No Oneko tho...
 
 ---
 
