@@ -1,6 +1,6 @@
 # Hash_Chain
 
-Live at **[komixkat.github.io/hashchain](https://komixkat.github.io/hashchain/)** — no install needed.
+Live at **[komixkat.github.io/hashchain](https://komixkat.github.io/hashchain/)**
 
 ---
 
@@ -29,7 +29,7 @@ Download `index.html` and open it in any browser. No Oneko tho...
 
 ---
 
-## How the magic works
+## How the 'magic' works
 
 Your salted passphrase is run through SHA-512 "X" times before anything else happens, which makes brute-forcing it slow. Then the site builds a chain by hashing forward. You post in reverse order, so each new token you reveal is the preimage of the previous one.
 
@@ -37,14 +37,17 @@ Verification is just `sha512 (newer token) == older token`, simple and efficient
 
 ---
 
-## Files
+## Files  
 
 ```
-index.html                    the whole app
+index.html                    the thing that does stuff
 .github/workflows/deploy.yml  auto-deploy to GitHub Pages
-oneko.js & oneko.gif          cat chase mouse
+oneko.js & oneko.gif          cat chase mouse 
 ```
+
+Special thanks to [@ari](https://github.com/adryd325/oneko.js) for oneko
 
 ---
 
+## License
 MIT license. Do whatever you want with it.
