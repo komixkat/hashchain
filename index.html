@@ -3,842 +3,864 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hash Chain</title>
+<title>hash_chain</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #060608;
-  --surface: #0d0d10;
-  --panel: #111116;
-  --border: #1e1e28;
-  --border2: #2a2a38;
-  --glow: #00ff9d;
-  --glow2: #00c87a;
-  --glow-dim: rgba(0,255,157,0.08);
-  --glow-mid: rgba(0,255,157,0.18);
-  --amber: #ffb800;
-  --amber-dim: rgba(255,184,0,0.1);
-  --red: #ff3c3c;
-  --red-dim: rgba(255,60,60,0.1);
-  --text: #d4d4e0;
-  --muted: #5a5a72;
-  --dim: #333344;
-  --mono: 'Space Mono', monospace;
-  --vt: 'VT323', monospace;
+  --bg:       #050508;
+  --s1:       #0a0a0e;
+  --s2:       #0f0f14;
+  --s3:       #16161c;
+  --s4:       #1e1e26;
+  --border:   #242430;
+  --border2:  #2e2e3c;
+  --text:     #f0f0f0;
+  --muted:    #666;
+  --dim:      #2a2a38;
+  --green:    #00ff41;
+  --green2:   #00cc33;
+  --green-bg: rgba(0,255,65,0.05);
+  --green-bd: rgba(0,255,65,0.2);
+  --red:      #ff4444;
+  --red-bg:   rgba(255,68,68,0.06);
+  --red-bd:   rgba(255,68,68,0.22);
+  --amber:    #ffaa00;
+  --amber-bg: rgba(255,170,0,0.06);
+  --amber-bd: rgba(255,170,0,0.22);
+  --mono: 'JetBrains Mono', monospace;
+  /* notebook grid lines */
+  --grid-color: rgba(255,255,255,0.028);
+  --grid-size: 28px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
   color: var(--text);
   font-family: var(--mono);
+  font-size: 14px;
   min-height: 100vh;
-  overflow-x: hidden;
   cursor: crosshair;
 }
 
-/* scanlines overlay */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.08) 2px,
-    rgba(0,0,0,0.08) 4px
-  );
-  pointer-events: none;
-  z-index: 1000;
-}
-
-/* noise grain */
-body::after {
-  content: '';
-  position: fixed;
-  inset: -50%;
-  width: 200%;
-  height: 200%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 999;
-  opacity: 0.4;
-  animation: grain 0.5s steps(2) infinite;
-}
-
-@keyframes grain {
-  0%,100% { transform: translate(0,0); }
-  10% { transform: translate(-2%,-3%); }
-  30% { transform: translate(3%,1%); }
-  50% { transform: translate(-1%,3%); }
-  70% { transform: translate(2%,-1%); }
-  90% { transform: translate(-3%,2%); }
-}
-
-/* ── Header ── */
-header {
-  border-bottom: 1px solid var(--border2);
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.header-inner {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-}
-
-.header-logo {
-  padding: 1.5rem 2rem;
-  border-right: 1px solid var(--border2);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-}
-
-.header-logo::after {
-  content: '';
-  position: absolute;
-  right: 0; top: 0; bottom: 0;
-  width: 1px;
-  background: var(--glow);
-  box-shadow: 0 0 8px var(--glow);
-  opacity: 0.4;
-}
-
-.logo-title {
-  font-family: var(--vt);
-  font-size: 2.8rem;
-  color: var(--glow);
-  text-shadow: 0 0 20px var(--glow), 0 0 40px rgba(0,255,157,0.3);
-  line-height: 1;
-  letter-spacing: 0.05em;
-}
-
-.logo-sub {
-  font-size: 0.55rem;
-  color: var(--muted);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  margin-top: 0.3rem;
-}
-
-.header-stats {
-  flex: 1;
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.hstat {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.hstat-label {
-  font-size: 0.5rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.hstat-val {
-  font-family: var(--vt);
-  font-size: 1.4rem;
-  color: var(--glow);
-  text-shadow: 0 0 10px rgba(0,255,157,0.4);
-  line-height: 1;
-}
-
-.header-blink {
-  width: 8px; height: 8px;
-  background: var(--glow);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--glow);
-  animation: blink 1.2s ease-in-out infinite;
-  margin-left: auto;
-  margin-right: 2rem;
-  flex-shrink: 0;
-  align-self: center;
-}
-
-@keyframes blink {
-  0%,100% { opacity: 1; }
-  50% { opacity: 0.1; }
-}
-
-/* ── Layout ── */
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: calc(100vh - 90px);
-}
-
-.col {
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-}
-
-.col:last-child { border-right: none; }
-
-/* ── Section ── */
-.section {
+/* titlebar */
+.titlebar {
+  padding: 0.8rem 1.5rem;
+  background: rgba(5,5,8,0.9);
   border-bottom: 1px solid var(--border);
-  flex: 1;
-}
-
-.section-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.logo { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; user-select: none; }
+.logo .word { color: #fff; }
+.logo .underscore {
+  color: var(--green);
+  animation: blink 1s step-end infinite;
+  text-shadow: 0 0 8px var(--green);
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.titlebar-right { display: flex; align-items: center; gap: 1rem; }
+
+.export-btn {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border2);
+  padding: 0.3rem 0.8rem;
+  cursor: crosshair;
+  transition: color 0.1s, border-color 0.1s;
+  display: none;
+  letter-spacing: 0.04em;
+}
+.export-btn.show { display: inline-flex; align-items: center; gap: 0.4rem; }
+.export-btn:hover { color: var(--green); border-color: var(--green); }
+
+/* page layout: two free-height columns */
+.page {
+  display: flex;
+  align-items: flex-start;
+}
+
+.col-left {
+  flex: 1;
+  min-width: 0;
+  border-right: 1px solid var(--border);
+}
+
+.col-right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* panel */
+.panel { border-bottom: 1px solid var(--border); }
+.panel:last-child { border-bottom: none; }
+
+.panel-head {
+  padding: 0.55rem 1rem;
+  background: rgba(5,5,8,0.8);
   border-bottom: 1px solid var(--border);
-  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 49px;
+  z-index: 10;
+  backdrop-filter: blur(4px);
 }
 
-.section-title {
-  font-family: var(--vt);
-  font-size: 1.2rem;
-  color: var(--glow);
-  letter-spacing: 0.08em;
-  text-shadow: 0 0 8px rgba(0,255,157,0.3);
-}
-
-.section-tag {
-  font-size: 0.5rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.6rem;
-  border-radius: 2px;
-  border: 1px solid;
-}
-
-.tag-green { border-color: var(--glow2); color: var(--glow2); background: var(--glow-dim); }
-.tag-amber { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
-.tag-muted { border-color: var(--border2); color: var(--muted); }
-
-.section-body { padding: 1.5rem; }
-
-/* ── Fields ── */
-.field { margin-bottom: 1.1rem; }
-.field:last-child { margin-bottom: 0; }
-
-.label {
-  display: block;
-  font-size: 0.55rem;
+.panel-title {
+  font-size: 0.62rem;
+  font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  color: var(--green);
+}
+
+.panel-badge {
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
   color: var(--muted);
-  margin-bottom: 0.45rem;
+  border: 1px solid var(--border2);
+  padding: 0.1rem 0.45rem;
+}
+.panel-badge.green { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); }
+.panel-badge.amber { color: var(--amber); border-color: var(--amber-bd); background: var(--amber-bg); }
+
+.panel-body { padding: 1.1rem 1rem; }
+
+/* tabs */
+.tabs { display: flex; }
+.tab {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 0.2rem 0.7rem;
+  cursor: crosshair;
+  transition: all 0.1s;
+}
+.tab:last-child { border-left: none; }
+.tab.active { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); }
+.tab:not(.active):hover { color: var(--text); border-color: var(--border2); }
+
+/* ── Fields ── */
+.field { margin-bottom: 0.9rem; }
+.field:last-child { margin-bottom: 0; }
+
+.lbl {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
 }
 
 input[type=text],
-input[type=password],
-input[type=number] {
+input[type=password] {
   width: 100%;
-  background: var(--surface);
+  background: var(--s2);
   border: 1px solid var(--border2);
   font-family: var(--mono);
-  font-size: 0.78rem;
-  padding: 0.65rem 0.85rem;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
   color: var(--text);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  caret-color: var(--green);
+  transition: border-color 0.1s, box-shadow 0.1s;
   border-radius: 0;
-  caret-color: var(--glow);
-  -webkit-appearance: none;
 }
-
 input::placeholder { color: var(--dim); }
+input:focus { border-color: var(--green2); box-shadow: 0 0 0 2px var(--green-bg); }
 
-input:focus {
-  border-color: var(--glow2);
-  box-shadow: 0 0 0 2px var(--glow-dim), inset 0 0 20px rgba(0,255,157,0.02);
+select {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: 0.55rem 2rem 0.55rem 0.8rem;
+  color: var(--text);
+  outline: none;
+  cursor: crosshair;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  transition: border-color 0.1s;
 }
+select:focus { border-color: var(--green2); }
+select option { background: var(--s1); }
 
-input[type=number] { width: auto; min-width: 90px; }
+textarea {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: 0.65rem 0.8rem;
+  color: var(--text);
+  outline: none;
+  resize: none;
+  height: 72px;
+  caret-color: var(--green);
+  line-height: 1.65;
+  transition: border-color 0.1s;
+  border-bottom: none;
+}
+textarea:focus { border-color: var(--green2); }
+textarea::placeholder { color: var(--dim); }
 
 /* ── Buttons ── */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: 1px solid var(--glow2);
-  background: transparent;
-  color: var(--glow);
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   letter-spacing: 0.06em;
-  padding: 0.6rem 1.1rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--border2);
+  background: var(--s3);
+  color: var(--text);
   cursor: crosshair;
   transition: all 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   border-radius: 0;
-  text-transform: uppercase;
-  position: relative;
-  overflow: hidden;
 }
-
-.btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--glow);
-  transform: translateX(-101%);
-  transition: transform 0.15s;
-}
-
-.btn span { position: relative; z-index: 1; }
-.btn:hover::before { transform: translateX(0); }
-.btn:hover { color: var(--bg); }
+.btn:hover { background: var(--s4); border-color: var(--border2); color: #fff; }
 .btn:active { transform: scale(0.98); }
 
-.btn-amber {
-  border-color: var(--amber);
-  color: var(--amber);
+.btn-green {
+  background: var(--green-bg);
+  border-color: var(--green2);
+  color: var(--green);
+  font-weight: 700;
 }
-.btn-amber::before { background: var(--amber); }
+.btn-green:hover { background: var(--green); color: #000; border-color: var(--green); }
 
-.btn-row {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-}
+.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.85rem; }
 
-/* ── Copy chip ── */
+/* ── Chip ── */
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 0.15rem 0.45rem;
   border: 1px solid var(--border2);
   background: transparent;
   color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
-  padding: 0.15rem 0.5rem;
   cursor: crosshair;
   transition: all 0.1s;
-  text-transform: uppercase;
   flex-shrink: 0;
+  border-radius: 0;
 }
+.chip:hover { border-color: var(--green2); color: var(--green); }
+.chip.ok { border-color: var(--green); color: var(--green); background: var(--green-bg); }
 
-.chip:hover { border-color: var(--glow2); color: var(--glow); }
-.chip.ok { border-color: var(--glow); color: var(--glow); background: var(--glow-dim); }
-
-/* ── Hash box ── */
-.hash-box {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  padding: 0.75rem 1rem;
+/* ── Hash display ── */
+.hash-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  position: relative;
+  gap: 0.6rem;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-left: 2px solid var(--green2);
+  padding: 0.7rem 0.85rem;
+  margin-top: 0.45rem;
 }
-
-.hash-box::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--glow);
-  box-shadow: 0 0 6px var(--glow);
-  opacity: 0.5;
-}
-
-.hash-val {
-  font-size: 0.72rem;
+.hash-text {
+  font-size: 0.78rem;
   color: var(--text);
   word-break: break-all;
   line-height: 1.6;
   flex: 1;
-  font-family: var(--mono);
 }
 
-/* ── Token spotlight ── */
-.token-box {
-  background: var(--surface);
-  border: 1px solid rgba(0,255,157,0.2);
-  padding: 0.85rem 1rem;
+/* ── Token display ── */
+.token-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  position: relative;
-  box-shadow: inset 0 0 30px rgba(0,255,157,0.03);
+  gap: 0.6rem;
+  background: var(--green-bg);
+  border: 1px solid var(--green-bd);
+  border-left: 2px solid var(--green);
+  padding: 0.75rem 0.85rem;
+  margin-top: 0.45rem;
 }
-
-.token-box::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--glow);
-  box-shadow: 0 0 10px var(--glow);
-}
-
-.token-val {
-  font-size: 0.75rem;
-  color: var(--glow);
+.token-text {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--green);
   word-break: break-all;
   line-height: 1.6;
   flex: 1;
-  font-family: var(--mono);
-  text-shadow: 0 0 8px rgba(0,255,157,0.3);
 }
 
-/* ── Stats row ── */
-.stats {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.stat {
-  font-size: 0.6rem;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-}
-
-.stat b { color: var(--text); }
-
-/* ── Post preview ── */
-.preview {
-  background: var(--surface);
-  border: 1px dashed var(--border2);
-  padding: 0.85rem 1rem;
-  font-size: 0.68rem;
-  line-height: 1.8;
-  color: var(--muted);
-  white-space: pre-wrap;
-  word-break: break-all;
-  margin-top: 0.75rem;
-}
-
-.preview .sig { color: var(--glow); }
-
-/* ── Verify result ── */
-.verify-out {
-  display: none;
-  margin-top: 0.85rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.72rem;
-  border-left: 2px solid;
-  line-height: 1.55;
-}
-
-.v-ok { border-color: var(--glow); color: var(--glow); background: var(--glow-dim); }
-.v-fail { border-color: var(--red); color: var(--red); background: var(--red-dim); }
-
-/* ── Lookup result ── */
-.lookup-out { display: none; margin-top: 0.75rem; }
-
-.lrow {
+/* ── Sig bar ── */
+.sig-bar {
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-top: none;
+  padding: 0.45rem 0.8rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.85rem;
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  justify-content: space-between;
+  gap: 0.6rem;
 }
+.sig-text { font-size: 0.72rem; font-weight: 500; color: var(--green); flex: 1; word-break: break-all; }
 
-.lrow.current { border-color: rgba(0,255,157,0.25); background: rgba(0,255,157,0.03); }
-
-.lnum {
-  font-size: 0.6rem;
-  color: var(--muted);
-  width: 2rem;
-  text-align: right;
-  flex-shrink: 0;
+/* ── Health bar ── */
+.health {
+  height: 2px;
+  background: var(--s4);
+  margin: 0.6rem 0;
 }
+.health-fill { height: 100%; transition: width 0.3s, background 0.3s; }
 
-.lrow.current .lnum { color: var(--glow); }
+/* ── Stats ── */
+.stats { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.stat { font-size: 0.65rem; color: var(--muted); }
+.stat b { color: var(--text); font-weight: 600; }
 
-.lhash {
-  font-size: 0.68rem;
-  color: var(--text);
-  flex: 1;
-  word-break: break-all;
+/* ── Verify result ── */
+.vresult {
+  display: none;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+  border-left-width: 3px;
   line-height: 1.5;
 }
+.vok   { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); border-left-color: var(--green); }
+.vfail { color: var(--red);   border-color: var(--red-bd);   background: var(--red-bg);   border-left-color: var(--red); }
 
-.lnote {
-  font-size: 0.58rem;
-  color: var(--muted);
-  margin-top: 0.3rem;
-  padding: 0 0.85rem;
+/* ── Chain list ── */
+.chain-list { display: flex; flex-direction: column; }
+
+.ci {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.42rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.08s;
+}
+.ci:last-child { border-bottom: none; }
+.ci:hover { background: var(--s2); }
+.ci.used { opacity: 0.3; }
+.ci.cur  { background: var(--green-bg); border-left: 2px solid var(--green); }
+
+.ci-cb {
+  width: 13px; height: 13px;
+  border: 1px solid var(--border2);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: crosshair;
+  transition: all 0.1s;
+  font-size: 0.6rem;
+  color: transparent;
+}
+.ci-cb:hover { border-color: var(--green); }
+.ci-cb.chk { background: var(--green); border-color: var(--green); color: #000; }
+
+.ci-n { font-size: 0.6rem; color: var(--muted); width: 2.2rem; text-align: right; flex-shrink: 0; }
+.ci.cur .ci-n { color: var(--green); font-weight: 700; }
+.ci-h { font-size: 0.68rem; color: var(--text); flex: 1; word-break: break-all; line-height: 1.4; }
+.ci.used .ci-h { color: var(--muted); }
+.ci.cur .ci-h { color: var(--green); }
+
+.ci-tag {
+  font-size: 0.5rem;
+  padding: 0.08rem 0.35rem;
+  border: 1px solid var(--green-bd);
+  color: var(--green);
+  background: var(--green-bg);
+  flex-shrink: 0;
   letter-spacing: 0.06em;
 }
 
-/* ── Inline row ── */
-.inline-row {
-  display: flex;
-  gap: 0.6rem;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.inline-row .field { flex: 1; min-width: 80px; margin-bottom: 0; }
-
 /* ── Note ── */
-.note {
-  font-size: 0.6rem;
-  color: var(--muted);
-  line-height: 1.65;
-  margin-top: 0.6rem;
-  letter-spacing: 0.02em;
+.note { font-size: 0.68rem; color: var(--muted); line-height: 1.6; }
+
+/* ── Upload zone ── */
+.upload-zone {
+  border: 1px dashed var(--border2);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: crosshair;
+  transition: all 0.12s;
+  margin-top: 0.5rem;
 }
+.upload-zone:hover, .upload-zone.drag { border-color: var(--green2); background: var(--green-bg); }
+.upload-zone input { display: none; }
+.upload-zone p { font-size: 0.7rem; color: var(--muted); line-height: 1.7; }
+.upload-zone p span { color: var(--green); }
 
-.note a { color: var(--glow2); text-decoration: none; }
-.note a:hover { text-decoration: underline; }
+/* ── Inline row ── */
+.inline-row { display: flex; gap: 0.5rem; align-items: flex-end; }
+.inline-row .field { flex: 1; margin-bottom: 0; }
 
-hr { border: none; border-top: 1px solid var(--border); margin: 1.1rem 0; }
+/* ── Lookup output ── */
+.lookup-out { display: none; margin-top: 0.6rem; }
 
-/* ── Hidden ── */
-.hidden { display: none; }
+hr { border: none; border-top: 1px solid var(--border); margin: 0.9rem 0; }
 
-/* ── Fade in ── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.fade-in { animation: fadeIn 0.25s ease both; }
+/* ── Animations ── */
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)} }
+.fade-in { animation: fadeIn 0.18s ease both; }
+@keyframes shake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)} }
+.shake { animation: shake 0.2s ease; }
 
-/* ── Shake ── */
-@keyframes shake {
-  0%,100%{transform:translateX(0)}
-  20%{transform:translateX(-4px)}
-  60%{transform:translateX(4px)}
-}
-.shake { animation: shake 0.22s ease; }
+.hidden { display: none !important; }
 
-/* ── Terminal cursor ── */
-@keyframes cursor {
-  0%,100%{opacity:1}50%{opacity:0}
-}
-
-.cursor {
-  display: inline-block;
-  width: 0.5em;
-  height: 0.9em;
-  background: var(--glow);
-  vertical-align: middle;
-  margin-left: 2px;
-  animation: cursor 1s step-end infinite;
-  box-shadow: 0 0 6px var(--glow);
-}
-
-/* ── Responsive ── */
-@media (max-width: 700px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .col { border-right: none; }
-  .header-stats { display: none; }
-  .logo-title { font-size: 2rem; }
+/* responsive */
+@media (max-width: 680px) {
+  .page { flex-direction: column; }
+  .col-left { border-right: none; border-bottom: 1px solid var(--border); }
 }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="header-logo">
-      <div class="logo-title">HASH_CHAIN</div>
-      <div class="logo-sub">anonymous identity protocol</div>
-    </div>
-    <div class="header-stats">
-      <div class="hstat">
-        <div class="hstat-label">algorithm</div>
-        <div class="hstat-val">SHA-256</div>
-      </div>
-      <div class="hstat">
-        <div class="hstat-label">chain depth</div>
-        <div class="hstat-val">100</div>
-      </div>
-      <div class="hstat">
-        <div class="hstat-label">key rounds</div>
-        <div class="hstat-val">2000</div>
-      </div>
-      <div class="hstat">
-        <div class="hstat-label">storage</div>
-        <div class="hstat-val">NONE</div>
-      </div>
-    </div>
-    <div class="header-blink"></div>
+<!-- Titlebar -->
+<div class="titlebar">
+  <div class="logo">
+    <span class="word">hash</span><span class="underscore">_</span><span class="word">chain</span>
   </div>
-</header>
-
-<div class="layout">
-
-  <!-- LEFT COL: Verify + Generate -->
-  <div class="col">
-
-    <!-- VERIFY -->
-    <div class="section">
-      <div class="section-bar">
-        <span class="section-title">VERIFY</span>
-        <span class="section-tag tag-muted">for readers</span>
-      </div>
-      <div class="section-body">
-        <p class="note" style="margin-top:0;margin-bottom:1rem">Paste two consecutive tokens. If <code>sha256(newer) == older</code> they chain correctly.</p>
-        <div class="field">
-          <label class="label">Older token or anchor</label>
-          <input type="text" id="vPrev" placeholder="from the earlier post" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="field">
-          <label class="label">Newer token to verify</label>
-          <input type="text" id="vCurr" placeholder="from the later post" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="btn-row" style="margin-top:0.5rem">
-          <button class="btn" onclick="doVerify()"><span>Verify</span></button>
-        </div>
-        <div class="verify-out" id="vResult"></div>
-      </div>
-    </div>
-
-    <!-- GENERATE -->
-    <div class="section">
-      <div class="section-bar">
-        <span class="section-title">GENERATE</span>
-        <span class="section-tag tag-muted">private</span>
-      </div>
-      <div class="section-body">
-        <div class="field">
-          <label class="label">Secret passphrase</label>
-          <input type="password" id="seedInput" autocomplete="off" spellcheck="false">
-        </div>
-        <p class="note">Never shared. Same phrase = same 100 tokens every time.</p>
-        <div class="btn-row">
-          <button class="btn btn-amber" onclick="setup()"><span id="genBtnText">Generate chain</span></button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- RIGHT COL: Chain (hidden until generated) -->
-  <div class="col" id="rightCol">
-
-    <!-- EMPTY STATE -->
-    <div id="emptyState" class="section" style="flex:1">
-      <div class="section-bar">
-        <span class="section-title">CHAIN</span>
-        <span class="section-tag tag-muted">waiting</span>
-      </div>
-      <div class="section-body" style="display:flex;align-items:center;justify-content:center;min-height:200px">
-        <div style="text-align:center">
-          <div style="font-family:var(--vt);font-size:3rem;color:var(--border2);margin-bottom:0.5rem">[ ]</div>
-          <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase">Enter passphrase to begin<span class="cursor"></span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ANCHOR (shown after generate) -->
-    <div id="anchorSection" class="section hidden fade-in">
-      <div class="section-bar">
-        <span class="section-title">ANCHOR</span>
-        <span class="section-tag tag-amber">post this once</span>
-      </div>
-      <div class="section-body">
-        <p class="note" style="margin-top:0;margin-bottom:0.5rem">Post in your first message. All future tokens trace back to this.</p>
-        <div class="hash-box">
-          <div class="hash-val" id="anchorVal"></div>
-          <span class="chip" id="copyAnchor" onclick="copyEl('anchorVal','copyAnchor')">copy</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- CURRENT TOKEN (shown after generate) -->
-    <div id="tokenSection" class="section hidden fade-in" style="flex:1">
-      <div class="section-bar">
-        <span class="section-title">CURRENT TOKEN</span>
-        <span class="section-tag tag-green" id="chainBadge">--</span>
-      </div>
-      <div class="section-body">
-        <div class="stats">
-          <span class="stat">token <b id="tNum">1</b> / 100</span>
-          <span class="stat"><b id="tLeft">100</b> remaining</span>
-        </div>
-        <p class="note" style="margin-top:0;margin-bottom:0.5rem">Paste at the bottom of your post, then mark used.</p>
-        <div class="token-box">
-          <div class="token-val" id="curToken"></div>
-          <span class="chip" id="copyToken" onclick="copyEl('curToken','copyToken')">copy</span>
-        </div>
-        <div class="preview" id="postPreview"></div>
-        <div class="btn-row">
-          <button class="btn" onclick="advance()"><span>Mark used + next</span></button>
-        </div>
-
-        <hr>
-
-        <p class="note" style="margin-top:0;margin-bottom:0.75rem">Jump to any token by number.</p>
-        <div class="inline-row">
-          <div class="field">
-            <label class="label">Token number</label>
-            <input type="number" id="lookupN" min="1" max="100" placeholder="e.g. 42">
-          </div>
-          <button class="btn" onclick="lookupToken()" style="height:2.5rem"><span>Show</span></button>
-        </div>
-        <div class="lookup-out" id="lookupOut"></div>
-      </div>
-    </div>
-
+  <div class="titlebar-right">
+    <button class="export-btn" id="exportBtn" onclick="exportTxt()">[ export .txt ]</button>
   </div>
 </div>
 
-<script>
-// ── Random passphrase placeholder ──
-const W = {
-  a: ['silent','hollow','cold','pale','lost','broken','quiet','empty','sharp','bitter','slow','dark','thin','wild','heavy'],
-  n: ['crow','moth','wolf','tide','ash','iron','root','smoke','bone','salt','raven','ghost','flame','dust','stone'],
-  v: ['chases','haunts','carries','watches','forgets','crosses','holds','finds','hides','drops','reads','pulls','lifts','moves','leaves'],
-  o: ['the moon','a key','nothing','the path','the signal','three coins','its shadow','the answer','an old name','the thread','the light','what remains']
-};
-const pick = a => a[Math.random()*a.length|0];
-document.getElementById('seedInput').placeholder = `${pick(W.a)} ${pick(W.n)} ${pick(W.v)} ${pick(W.o)}`;
+<div class="page">
 
-// ── Crypto core (closure) ──
-const _c = (() => {
-  const h = async s => {
-    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  <!-- left: generate + verify -->
+  <div class="col-left">
+
+    <!-- generate / upload -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="tabs">
+          <button class="tab active" id="tabGen" onclick="switchPanel('gen')">generate</button>
+          <button class="tab" id="tabUp" onclick="switchPanel('upload')">restore</button>
+        </div>
+      </div>
+      <div class="panel-body" id="panelGen">
+        <div class="field">
+          <label class="lbl">passphrase</label>
+          <input type="password" id="seedInput" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="lbl">tokens</label>
+          <select id="tokenCount">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="40" selected>40</option>
+            <option value="80">80</option>
+            <option value="160">160</option>
+          </select>
+        </div>
+        <p class="note">salted with generation time. same passphrase at a different time gives a different chain. export your .txt to restore later.</p>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="setup()"><span id="genBtnText">generate</span></button>
+        </div>
+        <div id="anchorWrap" class="hidden" style="margin-top:1rem">
+          <hr>
+          <div class="lbl">anchor // post this once</div>
+          <div class="hash-row">
+            <div class="hash-text" id="anchorVal"></div>
+            <span class="chip" id="copyAnchor" onclick="copyEl('anchorVal','copyAnchor')">copy</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body hidden" id="panelUp">
+        <p class="note" style="margin-bottom:0.75rem">upload an exported .txt file to restore your chain.</p>
+        <div class="upload-zone" id="dropZone"
+          onclick="document.getElementById('fileInput').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <input type="file" id="fileInput" accept=".txt" onchange="handleFile(this.files[0])">
+          <p>click or drag <span>hashchain-*.txt</span> here</p>
+        </div>
+        <div id="uploadMsg" class="note" style="margin-top:0.6rem;display:none"></div>
+      </div>
+    </div>
+
+    <!-- verify -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">verify</span>
+        <span class="panel-badge">sha-512</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label class="lbl">older token or anchor</label>
+          <input type="text" id="vPrev" placeholder="from the earlier post" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="lbl">newer token</label>
+          <input type="text" id="vCurr" placeholder="from the later post" autocomplete="off" spellcheck="false">
+        </div>
+        <button class="btn" onclick="doVerify()" style="margin-top:0.35rem">verify</button>
+        <div class="vresult" id="vResult"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- right: chain (hidden until generated) -->
+  <div class="col-right" id="chainCell" style="display:none">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">chain</span>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <span class="stat" id="chainStat" style="display:none">token <b id="tNum">1</b> / <b id="tTotal">0</b></span>
+          <span class="chip" id="advChip" style="display:none" onclick="advance()">mark used</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="tokenWrap" class="hidden">
+          <div class="stats">
+            <span class="stat"><b id="tLeft">0</b> remaining</span>
+          </div>
+          <div class="token-row">
+            <div class="token-text" id="curToken"></div>
+            <span class="chip" id="copyToken" onclick="copyEl('curToken','copyToken')">copy</span>
+          </div>
+          <div class="health"><div class="health-fill" id="healthFill"></div></div>
+          <div style="margin-top:0.75rem">
+            <label class="lbl">compose post</label>
+            <textarea id="postMsg" placeholder="write your message here..."></textarea>
+            <div class="sig-bar">
+              <span class="sig-text" id="sigLine"></span>
+              <span class="chip" id="copyPost" onclick="copyComposed()">copy all</span>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="advance()">mark used + next</button>
+          </div>
+          <hr>
+          <div class="inline-row" style="margin-bottom:0.5rem">
+            <div class="field">
+              <label class="lbl">jump to token</label>
+              <input type="text" id="lookupN" placeholder="e.g. 12" style="width:80px">
+            </div>
+            <button class="btn" onclick="lookupToken()" style="font-size:0.7rem">show</button>
+          </div>
+          <div class="lookup-out" id="lookupOut"></div>
+          <hr>
+        </div>
+        <div class="chain-list" id="chainList"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Passphrase placeholder ──
+const W={
+  a:['silent','hollow','cold','pale','lost','broken','quiet','empty','sharp','bitter'],
+  n:['crow','moth','wolf','tide','ash','iron','raven','ghost','flame','dust'],
+  v:['chases','haunts','carries','watches','forgets','crosses','holds','finds'],
+  o:['the moon','a key','nothing','the path','the signal','its shadow','the answer','the thread']
+};
+const pick=a=>a[Math.random()*a.length|0];
+document.getElementById('seedInput').placeholder=`${pick(W.a)} ${pick(W.n)} ${pick(W.v)} ${pick(W.o)}`;
+
+// ── Crypto: SHA-512 ──
+const _c=(()=>{
+  const h=async s=>{
+    const b=await crypto.subtle.digest('SHA-512',new TextEncoder().encode(s));
+    return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
   };
-  const stretch = async (seed, n) => {
-    let x = seed+'\x00hc\x01v5';
-    for(let i=0;i<n;i++) x = await h(x+i);
+  const stretch=async(pass,ts,depth)=>{
+    let x=pass+'\x00hcv8\x01'+ts+'\x02'+depth;
+    for(let i=0;i<depth;i++) x=await h(x+'\x03'+i);
     return x;
   };
-  return {h, stretch};
+  const AP='\xff\x00HC_ANCHOR\x00\xff';
+  const makeAnchor=async root=>h(AP+root);
+  const randDepth=()=>[64,96,128,160,192,256,320,384][Math.random()*8|0];
+  return{h,stretch,makeAnchor,randDepth};
 })();
 
-let _ch = null;
+let _ch=null;
 
-async function setup() {
-  const raw = document.getElementById('seedInput').value;
-  if(!raw.trim()){ shake('seedInput'); return; }
+// ── Panel switch ──
+function switchPanel(p){
+  document.getElementById('panelGen').classList.toggle('hidden',p!=='gen');
+  document.getElementById('panelUp').classList.toggle('hidden',p!=='upload');
+  document.getElementById('tabGen').classList.toggle('active',p==='gen');
+  document.getElementById('tabUp').classList.toggle('active',p==='upload');
+}
 
-  const btn = document.getElementById('genBtnText');
-  btn.textContent = 'Computing...';
+// ── Generate ──
+async function setup(){
+  const raw=document.getElementById('seedInput').value;
+  if(!raw.trim()){shake('seedInput');return;}
+  const n=parseInt(document.getElementById('tokenCount').value);
+  const btn=document.getElementById('genBtnText');
+  btn.textContent='computing...';
 
-  const s = await _c.stretch(raw, 2000);
-  const H = [s];
-  for(let i=0;i<101;i++) H.push(await _c.h(H[H.length-1]));
+  const ts=new Date().toISOString();
+  const depth=_c.randDepth();
+  const s=await _c.stretch(raw,ts,depth);
+  const H=[s];
+  for(let i=0;i<n+1;i++) H.push(await _c.h(H[H.length-1]));
 
-  _ch = { anchor: H[101], tokens: [], cursor: 0 };
-  for(let i=100;i>=1;i--) _ch.tokens.push(H[i]);
+  const anchor=await _c.makeAnchor(H[n+1]);
+  const tokens=[];
+  for(let i=n;i>=1;i--) tokens.push(H[i]);
 
-  document.getElementById('seedInput').value = '';
-  document.getElementById('seedInput').placeholder = `${pick(W.a)} ${pick(W.n)} ${pick(W.v)} ${pick(W.o)}`;
-  btn.textContent = 'Regenerate';
+  _ch={anchor,tokens,cursor:0,passphrase:raw,ts,depth,n};
+  document.getElementById('seedInput').value='';
+  document.getElementById('seedInput').placeholder=`${pick(W.a)} ${pick(W.n)} ${pick(W.v)} ${pick(W.o)}`;
+  btn.textContent='generate';
 
-  document.getElementById('anchorVal').textContent = _ch.anchor;
-  document.getElementById('emptyState').classList.add('hidden');
-  document.getElementById('anchorSection').classList.remove('hidden');
-  document.getElementById('tokenSection').classList.remove('hidden');
+  document.getElementById('anchorVal').textContent=anchor;
+  document.getElementById('anchorWrap').classList.remove('hidden');
+  document.getElementById('exportBtn').classList.add('show');
+
+  renderChain();
   updateUI();
 }
 
-function updateUI() {
-  const i = _ch.cursor, left = _ch.tokens.length - i;
-  document.getElementById('tNum').textContent = i+1;
-  document.getElementById('tLeft').textContent = left;
-  document.getElementById('chainBadge').textContent = `${left} left`;
-  const tok = _ch.tokens[i];
-  document.getElementById('curToken').textContent = tok;
-  document.getElementById('postPreview').innerHTML =
-    `your message...\n\n<span class="sig">sig: ${tok}</span>`;
-  resetChip('copyToken');
-  document.getElementById('lookupOut').style.display = 'none';
+// ── Restore ──
+async function restoreChain(data){
+  document.getElementById('genBtnText').textContent='restoring...';
+  const s=await _c.stretch(data.passphrase,data.ts,data.depth);
+  const H=[s];
+  for(let i=0;i<data.n+1;i++) H.push(await _c.h(H[H.length-1]));
+  const anchor=await _c.makeAnchor(H[data.n+1]);
+  const tokens=[];
+  for(let i=data.n;i>=1;i--) tokens.push(H[i]);
+
+  _ch={anchor,tokens,cursor:0,...data};
+  document.getElementById('anchorVal').textContent=anchor;
+  document.getElementById('anchorWrap').classList.remove('hidden');
+  document.getElementById('exportBtn').classList.add('show');
+  document.getElementById('genBtnText').textContent='generate';
+  renderChain();
+  updateUI();
+  switchPanel('gen');
 }
 
-function advance() {
-  if(!_ch || _ch.cursor >= _ch.tokens.length-1){
-    alert('All 100 tokens used. Re-enter your passphrase to restart.'); return;
+// ── Update UI ──
+function updateUI(){
+  if(!_ch)return;
+  const i=_ch.cursor,left=_ch.tokens.length-i;
+  document.getElementById('tNum').textContent=i+1;
+  document.getElementById('tTotal').textContent=_ch.tokens.length;
+  document.getElementById('tLeft').textContent=left;
+  document.getElementById('chainCell').style.display='flex';
+  document.getElementById('chainStat').style.display='flex';
+  document.getElementById('advChip').style.display='inline-flex';
+
+  const tok=_ch.tokens[i];
+  document.getElementById('curToken').textContent=tok;
+  document.getElementById('sigLine').textContent='sig: '+tok;
+  resetChip('copyToken');resetChip('copyPost');
+  document.getElementById('lookupOut').style.display='none';
+  document.getElementById('tokenWrap').classList.remove('hidden');
+
+  const pct=(left/_ch.tokens.length)*100;
+  const fill=document.getElementById('healthFill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct>30?'var(--green)':pct>12?'var(--amber)':'var(--red)';
+
+  document.querySelectorAll('.ci').forEach((el,idx)=>{
+    el.classList.toggle('cur',idx===i);
+    el.classList.toggle('used',idx<i);
+  });
+  const cur=document.querySelector('.ci.cur');
+  if(cur)cur.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+// ── Render chain list ──
+function renderChain(){
+  if(!_ch)return;
+  const list=document.getElementById('chainList');
+  list.innerHTML='';
+  _ch.tokens.forEach((tok,i)=>{
+    const d=document.createElement('div');
+    d.className='ci'+(i===_ch.cursor?' cur':i<_ch.cursor?' used':'');
+    d.innerHTML=`
+      <div class="ci-cb${i<_ch.cursor?' chk':''}" onclick="toggleCheck(${i},this)">${i<_ch.cursor?'x':''}</div>
+      <div class="ci-n">${i+1}</div>
+      <div class="ci-h">${tok}</div>
+      ${i===_ch.cursor?'<span class="ci-tag">next</span>':''}
+      <span class="chip" onclick="copyText('${tok}',this)">copy</span>`;
+    list.appendChild(d);
+  });
+}
+
+function toggleCheck(idx,el){
+  el.classList.toggle('chk');
+  el.textContent=el.classList.contains('chk')?'x':'';
+  el.closest('.ci').classList.toggle('used',el.classList.contains('chk'));
+}
+
+function advance(){
+  if(!_ch||_ch.cursor>=_ch.tokens.length-1){alert('all tokens used. re-enter your passphrase.');return;}
+  _ch.cursor++;renderChain();updateUI();
+}
+
+// ── Composer ──
+async function copyComposed(){
+  const msg=document.getElementById('postMsg').value.trim();
+  const sig=document.getElementById('sigLine').textContent;
+  await copyText(msg?`${msg}\n\n${sig}`:sig,document.getElementById('copyPost'));
+}
+
+// ── Verify ──
+async function doVerify(){
+  const prev=document.getElementById('vPrev').value.trim();
+  const curr=document.getElementById('vCurr').value.trim();
+  const el=document.getElementById('vResult');
+  if(!prev||!curr){el.style.display='none';return;}
+  const h=await _c.h(curr);
+  el.style.display='block';
+  if(h===prev){
+    el.className='vresult vok fade-in';
+    el.textContent='valid. tokens chain correctly. same person.';
+  }else{
+    el.className='vresult vfail fade-in';
+    el.textContent='invalid. these do not chain. wrong order or forgery.';
   }
-  _ch.cursor++;
-  updateUI();
 }
 
-async function lookupToken() {
-  if(!_ch) return;
-  const n = parseInt(document.getElementById('lookupN').value);
-  if(!n||n<1||n>100){ shake('lookupN'); return; }
-  const idx = n-1, tok = _ch.tokens[idx];
-  const isCurrent = idx===_ch.cursor, isUsed = idx<_ch.cursor;
-  const out = document.getElementById('lookupOut');
-  out.style.display = 'block';
-  out.innerHTML = `
-    <div class="lrow ${isCurrent?'current':''}" style="margin-bottom:0.25rem">
-      <div class="lnum">#${n}</div>
-      <div class="lhash">${tok}</div>
+// ── Lookup ──
+function lookupToken(){
+  if(!_ch)return;
+  const n=parseInt(document.getElementById('lookupN').value);
+  if(!n||n<1||n>_ch.tokens.length){shake('lookupN');return;}
+  const idx=n-1,tok=_ch.tokens[idx];
+  const isCur=idx===_ch.cursor,isUsed=idx<_ch.cursor;
+  const out=document.getElementById('lookupOut');
+  out.style.display='block';
+  out.innerHTML=`
+    <div style="display:flex;align-items:center;gap:0.6rem;background:var(--s2);border:1px solid ${isCur?'var(--green-bd)':'var(--border2)'};${isCur?'border-left:2px solid var(--green);background:var(--green-bg)':''}padding:0.5rem 0.75rem;margin-bottom:0.2rem">
+      <span style="font-size:0.6rem;color:var(--muted);width:2rem;text-align:right">#${n}</span>
+      <span style="font-size:0.7rem;color:${isCur?'var(--green)':'var(--text)'};flex:1;word-break:break-all">${tok}</span>
       <span class="chip" onclick="copyText('${tok}',this)">copy</span>
     </div>
-    <div class="lnote">${isUsed?'already used':isCurrent?'current token':`${idx-_ch.cursor} ahead`}</div>`;
+    <div style="font-size:0.6rem;color:var(--muted);padding:0 0.75rem">${isUsed?'already used':isCur?'current token':`${idx-_ch.cursor} ahead`}</div>`;
 }
 
-async function doVerify() {
-  const prev = document.getElementById('vPrev').value.trim();
-  const curr = document.getElementById('vCurr').value.trim();
-  const el = document.getElementById('vResult');
-  if(!prev||!curr){ el.style.display='none'; return; }
-  const hashed = await _c.h(curr);
-  el.style.display = 'block';
-  if(hashed===prev){
-    el.className='verify-out v-ok fade-in';
-    el.textContent='VALID: tokens chain correctly. Same person.';
-  } else {
-    el.className='verify-out v-fail fade-in';
-    el.textContent='INVALID: these do not chain. Wrong order or forgery.';
-  }
+// ── Export TXT ──
+function exportTxt(){
+  if(!_ch)return;
+  const ts=new Date(_ch.ts);
+  const lines=[
+    '================================================================',
+    '  HASH CHAIN - RESTORATION FILE',
+    '================================================================',
+    '  This file regenerates your chain. Keep it private.',
+    '',
+    `  Generated : ${ts.toUTCString()}`,
+    `  Tokens    : ${_ch.n}`,
+    '',
+    '  [RESTORE DATA - DO NOT MODIFY]',
+    `  passphrase=${_ch.passphrase}`,
+    `  ts=${_ch.ts}`,
+    `  depth=${_ch.depth}`,
+    `  n=${_ch.n}`,
+    '',
+    '  Verify page: https://komixkat.github.io/hashchain',
+    '================================================================',
+  ];
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));
+  a.download=`hashchain-${ts.toISOString().slice(0,10)}.txt`;
+  a.click();
 }
 
-async function copyEl(srcId, chipId) {
-  await copyText(document.getElementById(srcId).textContent.trim(), document.getElementById(chipId));
+// ── Upload ──
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f)handleFile(f);
+}
+function handleFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const get=key=>{const m=text.match(new RegExp(key+'=(.+)'));return m?m[1].trim():null;};
+    const passphrase=get('passphrase'),ts=get('ts'),depth=parseInt(get('depth')),n=parseInt(get('n'));
+    const msg=document.getElementById('uploadMsg');
+    msg.style.display='block';
+    if(!passphrase||!ts||!depth||!n){
+      msg.style.color='var(--red)';
+      msg.textContent='could not parse file. make sure it is unmodified.';
+      return;
+    }
+    msg.style.color='var(--green)';
+    msg.textContent=`restoring ${n}-token chain from ${new Date(ts).toLocaleDateString()}...`;
+    restoreChain({passphrase,ts,depth,n});
+  };
+  reader.readAsText(file);
 }
 
-async function copyText(text, chip) {
-  try { await navigator.clipboard.writeText(text); }
-  catch {
-    const t = document.createElement('textarea');
-    t.value=text; t.style.cssText='position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
-    document.body.appendChild(t); t.focus(); t.select();
-    document.execCommand('copy'); t.remove();
+// ── Copy helpers ──
+async function copyEl(srcId,chipId){
+  await copyText(document.getElementById(srcId).textContent.trim(),document.getElementById(chipId));
+}
+async function copyText(text,chip){
+  try{await navigator.clipboard.writeText(text);}
+  catch{
+    const t=document.createElement('textarea');
+    t.value=text;t.style.cssText='position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+    document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');t.remove();
   }
   if(chip){
-    chip.classList.add('ok'); chip.textContent='ok';
-    setTimeout(()=>{ chip.classList.remove('ok'); chip.textContent='copy'; }, 1800);
+    chip.classList.add('ok');chip.textContent='ok';
+    setTimeout(()=>{chip.classList.remove('ok');chip.textContent=chip.id==='copyPost'?'copy all':'copy';},1800);
   }
 }
-
-function resetChip(id) {
-  const c = document.getElementById(id);
-  if(c){ c.classList.remove('ok'); c.textContent='copy'; }
+function resetChip(id){
+  const c=document.getElementById(id);if(!c)return;
+  c.classList.remove('ok');c.textContent=id==='copyPost'?'copy all':'copy';
 }
-
-function shake(id) {
-  const el = document.getElementById(id);
-  el.classList.remove('shake');
-  void el.offsetWidth;
-  el.classList.add('shake');
-  setTimeout(()=>el.classList.remove('shake'),250);
+function shake(id){
+  const el=document.getElementById(id);
+  el.classList.remove('shake');void el.offsetWidth;
+  el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),220);
 }
 </script>
 
+<!-- oneko.js touch support + script -->
 <script>
 document.addEventListener("touchmove", e => {
   const touch = e.touches[0];
@@ -848,8 +870,7 @@ document.addEventListener("touchmove", e => {
   }));
 }, { passive: true });
 </script>
-
 <script src="oneko.js"></script>
-  
+
 </body>
 </html>
